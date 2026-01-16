@@ -4,7 +4,7 @@
 - [1. The VM](#1-the-vm)
 - [1.1. VM creation](#11-vm-creation)
 - [1.3. VM Setup](#13-vm-setup)
-		- [1.3.1. Add user as sudo](#131-add-user-as-sudo)
+	- [1.3.1. Add user as sudo](#131-add-user-as-sudo)
 
 ## 1. The VM
 ### 1.1. VM creation
@@ -31,7 +31,8 @@ create the folder:
 mkdir -p /home/mpeshko/data/mariadb /home/mpeshko/data/wordpress.
 ```
 
-Add user as Sudo
+### 1.3. VM setup
+#### 1.3.1. Add user as Sudo
 Docker Permissions: Later in this project, you will likely want to run Docker commands without typing sudo every single time (e.g., just docker-compose up instead of sudo docker-compose up). To do that, mpeshko will need to be part of the docker group.
 Security & Best Practice: In a real-world LEMP setup, you never work as "root" directly. It’s too easy to delete a critical system file by mistake. You work as a normal user (mpeshko) and "escalate" to sudo only when needed.
 Path Accuracy: Your project requires data to live in /home/mpeshko/data. If you do everything as the root user, you might accidentally create those folders with "root-only" permissions. Then, your WordPress container (running as a non-root user inside the container) might fail to write files to those folders, causing a "Permission Denied" error.
