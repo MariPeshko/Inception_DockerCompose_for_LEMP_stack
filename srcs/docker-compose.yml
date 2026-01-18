@@ -1,0 +1,25 @@
+services:
+
+  # mariadb container
+  mariadb:
+#container_name:
+    build: ./requirements/mariadb/
+#networks:
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/code
+    restart: always
+  # restart: on-failure
+  # env_file: or environment:
+
+  # wordpress container
+
+  # nginx container
+
+# networks
+
+#networks:
+
+# volumes
+

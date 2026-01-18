@@ -13,6 +13,7 @@ docker images
 
 #### run container
 -d (detached mode) Docker launchs the container in the background.
+
 --name You have given the container a convenient name. Now you can refer to it by name instead of its long ID.
 
 ```bash
@@ -45,7 +46,7 @@ docker exec mariadb_container ps aux
 
 You will see a table where the PID column opposite mariadbd will contain the number 1. This is the ideal result.
 
-Try going inside the working container and checking whether the database has been created.
+Go inside the working container and check whether the database has been created.
 
 Warning: When you restart the database, please note - the user "mari_unix" must be exactly the same as MYSQL_USER in your .env.
 
@@ -57,10 +58,24 @@ docker exec -it mariadb_container mariadb -u mari_unix -p
 
 In a script we specified the % symbol when create a use - '${MYSQL_USER}'@'%' - means that the user can connect from any IP address (for example, from a WordPress container). 
 
-In MariaDB, localhost is a special case. Sometimes MariaDB considers ‘mari_unix’@'localhost' and ‘mari_unix’@'%' to be different entries. Try connecting by explicitly specifying the host as 127.0.0.1:
+```SQL
+SHOW DATABASES;
+```
 
-```bash
-docker exec -it mariadb_container mariadb -h 127.0.0.1 -u mari_unix -p
+Switch to your database.
+```SQL
+USE your_database_name;
+SHOW TABLES;
+```
+
+Create your first, simplest spreadsheet. For example, for some notes.
+```SQL
+CREATE TABLE notes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    message VARCHAR(255)
+);
+INSERT INTO notes (message) VALUES ('Hello, MariaDB!');
+SELECT * FROM notes;
 ```
 
 Let's log in as root (whose password we changed in the script) and look at the list of users.
@@ -83,18 +98,17 @@ docker rmi my_mariadb
 ```
 
 Issue: The script skipped initialization
-Since you are on WSL, Docker Desktop sometimes stores data in internal volumes, even if you have not explicitly specified them.
 
 Try this “nuclear” cleaning method before the next build:
 
 ```bash
 docker stop $(docker ps -qa) 2>/dev/null
 docker rm $(docker ps -qa) 2>/dev/null
+docker rmi -f $(docker images -qa)
 docker volume prune -f
 ```
 
 or
 ```bash
-docker rm -f mariadb_container
 docker system prune -a --volumes -f
 ```

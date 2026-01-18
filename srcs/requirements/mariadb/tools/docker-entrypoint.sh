@@ -13,14 +13,12 @@ if [ ! -d "/var/lib/mysql/mysql" ]; then
     # Setting up system tables
     mysql_install_db --user=mysql --datadir=/var/lib/mysql
 
-    # Тимчасово запускаємо сервер для налаштування
-    # --skip-networking дозволяє не відкривати порти під час налаштування
+    # Temporarily start the server for configuration
     tfile=`mktemp`
     if [ ! -f "$tfile" ]; then
         return 1
     fi
 
-    # Створюємо SQL-команди для налаштування
     # The % symbol means that the user can connect from any IP address (for example, from a WordPress container).
     cat << EOF > $tfile
 USE mysql;
@@ -28,11 +26,14 @@ FLUSH PRIVILEGES;
 CREATE DATABASE IF NOT EXISTS \`${MYSQL_DATABASE}\`;
 CREATE USER IF NOT EXISTS '${MYSQL_USER}'@'%' IDENTIFIED BY '${MYSQL_PASSWORD}';
 GRANT ALL PRIVILEGES ON \`${MYSQL_DATABASE}\`.* TO '${MYSQL_USER}'@'%';
+CREATE USER IF NOT EXISTS '${MYSQL_USER}'@'localhost' IDENTIFIED BY '${MYSQL_PASSWORD}';
+GRANT ALL PRIVILEGES ON \`${MYSQL_DATABASE}\`.* TO '${MYSQL_USER}'@'localhost';
 ALTER USER 'root'@'localhost' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}';
 FLUSH PRIVILEGES;
 EOF
     echo "Executing bootstrap SQL..."
-    # Використовуємо --datadir, щоб точно знати, куди пишуться дані
+    # This method does not require running a full server for initial setup.
+    # We use --datadir to know exactly where the data is written.
     /usr/sbin/mariadbd --user=mysql --bootstrap --datadir=/var/lib/mysql < $tfile
     if [ $? -ne 0 ]; then
         echo "Bootstrap failed!"
@@ -40,6 +41,10 @@ EOF
     fi
     rm -f $tfile
     echo "Database initialized successfully."
+
+    else
+    echo "DEBUG: Directory /var/lib/mysql/mysql already exists. Skipping initialization."
+
 fi
 
 # Фінальна перевірка прав перед запуском
