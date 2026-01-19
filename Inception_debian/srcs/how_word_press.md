@@ -61,7 +61,7 @@ My error: OCI runtime exec failed: exec failed: unable to start container proces
 
 Solution:
 ```bash
-docker exec -it wordpress_container grep "listen =" /etc/php/8.1/fpm/pool.d/www.conf
+docker exec -it wordpress_container grep "listen =" /etc/php/8.2/fpm/pool.d/www.conf
 ```
 
 Another solution:
@@ -81,7 +81,7 @@ docker exec -it wordpress_container wp user create test_user test@example.com --
 And then check through MariaDB if it appeared there:
 
 ```bash
-docker exec -it mariadb mariadb -u mpeshko -p -e "USE inception_db; SELECT user_login FROM wp_users;"
+docker exec -it mariadb_container mariadb -u mpeshko -p -e "USE inception_db; SELECT user_login FROM wp_users;"
 ```
 
 Remove the old container: 

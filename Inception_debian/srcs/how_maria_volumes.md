@@ -21,14 +21,3 @@ But it should be deleted if you explicitly run
 docker-compose down -v
 ```
 
-How to remove Bind Mount?
-To delete data stored via Bind Mount, you need to do it manually in your virtual machine's terminal:
-```bash
-sudo rm -rf /home/mpeshko/data/mariadb/*
-# take ownership back
-sudo chown -R mpeshko:mpeshko /home/mpeshko/data/mariadb
-
-sudo rm -rf /home/mpeshko/data/wordpress/*
-# take ownership back
-sudo chown -R mpeshko:mpeshko /home/mpeshko/data/wordpress
-```
