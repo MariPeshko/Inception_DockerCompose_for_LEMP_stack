@@ -5,6 +5,12 @@ Use this command to start the application:
 docker compose up -d --build
 ```
 
+Stop and start
+```bash
+docker compose stop
+docker compose start
+```
+
 Use this command to remove everything:
 ```bash
 docker compose down

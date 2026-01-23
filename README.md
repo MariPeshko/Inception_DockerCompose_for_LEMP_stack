@@ -3,23 +3,60 @@
 # Inception
 
 ## **Description**
-This section clearly presents the project, including its goal and a brief overview.
+TODO: This section clearly presents the project, including its goal and a brief overview.
+
+For more info: [subject](https://github.com/MariPeshko/Inception_DockerCompose_for_LEMP_stack/blob/main/Inception_5.2_en.subject.pdf).
 
 ## **Instructions**
 This section contains any relevant information about compilation, installation, and/or execution.
 
 ## **Virtual Machines vs Docker**
 
+![Inception](img/vm_vs_container.jpg "Inception")
+![Inception](img/vm-vs-vt.png "Inception")
+Source: [Azedine Ouhadou](https://github.com/azedineouhadou)
+---
+
 ## **Secrets vs Environment Variables**
+
+#### Environment Variables (what I did in this project)
+- **How it works:** You create a single `.env` file where all your secrets are stored as environment variables (`KEY=VALUE`). Docker Compose reads this file and passes these variables into the containers. Your application (e.g., the `docker-entrypoint.sh` script) reads these environment variables (e.g., `${MYSQL_PASSWORD}`).
+- **Advantages:** Very easy to set up and use. It is a common standard for development.
+- **Disadvantages:** Environment variables can be visible if someone gains access to the container and runs the `env` or `docker inspect` command.
+
+#### Docker Secrets
+- **How it works:** Each secret is stored in a separate file (for example, the database password in db_password.txt). In docker-compose.yml, you tell Docker that these files are “secrets.” Docker mounts these files inside the container into a special temporary directory in memory (/run/secrets/). Your application must read the contents of these files to obtain the secret.
+- **Example in docker-compose.yml:**
+```bash
+services:
+  mariadb:
+    # ...
+    secrets:
+      - db_password
+      - db_root_password
+
+secrets:
+  db_password:
+    file: ./secrets/db_password.txt
+  db_root_password:
+    file: ./secrets/db_root_password.txt
+```
+- **Advantages:** Considered more secure. Secrets are not stored in environment variables and do not end up in logs as easily. They only exist as files in a temporary file system in the container's memory.
+- **Disadvantages**: Slightly more difficult to configure.
+
+---
 
 ## **Docker Network vs Host Network**
 
+TODO
+
 ## **Docker Volumes vs Bind Mounts**
 
-Both Docker volumes (Named Volumes) and bind mounts allow container data to persist, but they operate quite differently. Docker volumes are the preferred method, where Docker creates and manages a dedicated storage area on the host filesystem, completely isolated from the host's core files. This makes volumes ideal for production as they are platform-independent and can be safely managed through the Docker CLI. You can create, list, and remove volumes without knowing their exact location on the host machine.
+Both **Docker volumes** (Named Volumes) and **bind mounts** allow container data to persist, but they operate quite differently. Docker volumes are the preferred method, where Docker creates and manages a dedicated storage area on the host filesystem, completely isolated from the host's core files. This makes volumes ideal for production as they are platform-independent and can be safely managed through the Docker CLI. You can create, list, and remove volumes without knowing their exact location on the host machine.
 
 Docker Volume example.
-You tell Docker, "Create an object called mariadb_data. Where you put it is up to you, just give me access to it." Who is in charge: Docker. It creates the folder itself (usually in /var/lib/docker/volumes/), sets the correct access rights itself.
+
+You tell Docker, "Create an object called mariadb_data. Where you put it is up to you, just give me access to it." Who is in charge: Docker. It creates the folder itself (usually in `/var/lib/docker/volumes/`), sets the correct access rights itself.
 
 ```bash
 # Docker will create the 'db_data' volume itself if it doesn't exist
@@ -39,16 +76,25 @@ docker run -d --name wordpress --network test_network \
   my_wordpress
 ```
 
-You are explicitly telling Docker: "Take this specific folder on my computer /home/mpeshko/data/mariadb and push it into the container."
+You are explicitly telling Docker: *"Take this specific folder on my computer `/home/mpeshko/data/mariadb` and push it into the container."*
 
 In the Inception project, Bind Mounts are prohibited because the project should be as isolated as possible and independent of the folder structure of a particular user.
 
 **Why do you see device: /home/mpeshko/data/wordpress in Inception?**
 
-This is a **"hybrid" approach**. It's a Named Volume that is configured to store data in a specific location (via driver_opts). Technically it's still a Named Volume, but with a hard-link.
+This is a **"hybrid" approach**. It's a Named Volume that is configured to store data in a specific location (via `driver_opts`). Technically it's still a Named Volume, but with a hard-link.
+
+---
 
 ## **Resources**
-section listing classic references related to the topic (documentation, articles, tutorials, etc.), as well as a description of how AI was used — specifying for which tasks and which parts of the project.
+TODO: section listing classic references related to the topic (documentation, articles, tutorials, etc.), as well as a description of how AI was used — specifying for which tasks and which parts of the project.
+
+- [Manual for Oracle Virtual Box for virtual machine](https://www.virtualbox.org/manual/ch01.html)
+- [Shared Folder in VM](https://www.virtualbox.org/manual/ch03.html#shared-folders)
+- [Drag and Drop in VM](https://www.virtualbox.org/manual/ch04.html)
+- [Guest Additions](https://www.virtualbox.org/manual/ch04.html)
+
+Gemini chat in a browser - to research and to debug.
 
 ## Table of Contents
 - [1. The VM](#1-the-vm)
@@ -63,24 +109,27 @@ section listing classic references related to the topic (documentation, articles
 ## 1. The VM
 
 ### 1.1. VM Creation
-1. Download image of Debian https://cdimage.debian.org/cdimage/release/13.3.0/amd64/iso-cd/
-I chose debian-13.3.0-amd64-netinst.iso
+1. Download image of [Debian](https://cdimage.debian.org/cdimage/release/13.3.0/amd64/iso-cd/). I chose the latest stable debian-13.3.0-amd64-netinst.iso (January, 2026).
 
 *What is a netinst image?*
 The netinst CD here is a small CD image that contains just the core Debian installer code and a small core set of text-mode programs (known as "standard" in Debian).
 
-2. I use Oracle Virtual Box for virtual machine. Manual: https://www.virtualbox.org/manual/ch01.html
+2. I use Oracle Virtual Box for virtual machine.
 3. Settings: 4GB Memory, 4 processors, Enable EFI. Enables Extensible Firware Interface (EFI) booting for the guest OS; 29GB HardDisk. I enable EFI The Extensible Firmware Interface (EFI), officially known as the Unified Extensible Firmware Interface (UEFI), is a modern software interface that has replaced the traditional BIOS.
-4. VM settings > System: I disable Audio; Display: 128 Mb and Graphic Controller VMSVGA (Use this graphics controller to emulate a VMware SVGA graphics device. This is the default graphics controller for Linux guests.) and Enable 3D Acceleration for better UI responsiveness.
-5. Network is set to NAT - Network Address Translation (NAT) mode. This way the guest can connect to the outside world using the host's networking and the outside world can connect to services on the guest which you choose to make visible outside of the virtual machine.
+4. VM settings > System:
+- I disable Audio
+- Display: 128 Mb
+- Graphic Controller VMSVGA (Use this graphics controller to emulate a VMware SVGA graphics device. This is the default graphics controller for Linux guests.)
+- Enable 3D Acceleration for better UI responsiveness.
+5. Network is set to NAT (Network Address Translation) mode. This way the guest can connect to the outside world using the host's networking and the outside world can connect to services on the guest which you choose to make visible outside of the virtual machine.
 
 ### 1.2. Installation
 1. When starting the VM, choose Graphical Install.
 2. A domain name is a human-friendly address, like google.com, that identifies a website on the internet, replacing complex numerical IP addresses (e.g., 192.0.2.2) and acting as a unique, memorable identifier for online services like websites and email.
-3. In the partition menu - Partitioning method: Guided - use entire disk and set up LVM
+3. In the partition menu - Partitioning method: `Guided - use entire disk and set up LVM`
 4. Only / root (no partition needed).
 5. Amount of volume group to use for guided partitioning: 27GB
-6. Software selection: Ssh and GNOME - better lightweigh XFCE is a great choice for virtual machines because it uses very little RAM.
+6. Software selection: Ssh and GNOME. Probably, it's better lightweigh XFCE. It's a great choice for virtual machines because it uses very little RAM.
 
 ### 1.3. VM Setup
 
@@ -110,13 +159,11 @@ If you see sudo in the list, you are all set!
 
 In the Settings window, under General, you can configure the most fundamental aspects of the virtual machine such as memory and essential hardware.
 
-*Shared Clipboard.*  If you want to enable the copy and paste between the VM and your main PC, go to the Device Settings > General -> General. Advanced tab -> Shared Clipboard > Bidirectional. With this option, you can copy and paste text between the VM and your main PC.
+*Shared Clipboard.*  If you want to enable the copy and paste between the VM and your main PC, go to the `Device Settings > General -> General. Advanced tab -> Shared Clipboard > Bidirectional`. With this option, you can copy and paste text between the VM and your main PC.
 
 *Drag and Drop.* Remain disabled.
-https://www.virtualbox.org/manual/ch04.html
 
 **Shared Folder** improvement that makes your workflow much smoother.
-https://www.virtualbox.org/manual/ch03.html#shared-folders
 
 Without a shared folder, your Virtual Machine (VM) is like a computer in a locked room. If you want to move a file (like a configuration script or a piece of code) from your Ubuntu host to your Debian VM, you would have to use a USB drive, email it to yourself, or use GitHub.
 A Shared Folder acts like a "bridge." It creates a folder that exists on both machines at the same time.
@@ -125,14 +172,12 @@ A Shared Folder acts like a "bridge." It creates a folder that exists on both ma
 
 **VirtualBox Guest Additions** are special drivers for your VM. Think of them as the "software" that tells Debian how to talk to the VirtualBox hardware.
 
-Oracle Manual. Guest Additions https://www.virtualbox.org/manual/ch04.html
-
 The Oracle VM VirtualBox Guest Additions for all supported guest operating systems are provided as a single CD-ROM image file which is called VBoxGuestAdditions.iso. This image file is located in the installation directory of Oracle VM VirtualBox. To install the Guest Additions for a particular VM, you mount this ISO file in your VM as a virtual CD-ROM and install from there.
 
 Instruction:
-1. In your main PC, create a folder in your home directory called /shared . This folder will be used to share files between your main PC and the VM.
-2. In the VirtualBox settings > Shared Folders, add a new shared folder with the name shared and the path to the folder “/home/mpeshko/shared” that you created in your main PC and check the auto-mount.
-3. In the menu of the "Instance" (the window where Debian is actually running) - Devices > select insert Guest Additions CD image.
+1. In your main PC, create a folder in your home directory called `/shared`. This folder will be used to share files between your main PC and the VM.
+2. In the `VirtualBox settings > Shared Folders`, add a new shared folder with the name shared and the path to the folder `“/home/mpeshko/shared”` that you created in your main PC and check the auto-mount.
+3. In the menu of the `"Instance"` (the window where Debian is actually running) - `Devices` > select `insert Guest Additions CD image`.
 4. Open the terminal in the CD folder and run the following command
 ```bash
 sudo sh VBoxLinuxAdditions.run
@@ -145,7 +190,11 @@ sudo usermod -aG vboxsf your_user
 sudo chown -R your_user:users /media/ 
 sudo reboot
 ```
-6. Logout and login again to apply the changes. Now, you can see the shared folder in the /media folder as an external device. ls /media You should see a folder starting with sf_ (for example, sf_shared). If you see it, you are officially "connected" to your Ubuntu host!
+6. Logout and login again to apply the changes. Now, you can see the shared folder in the `/media` folder as an external device.
+```bash
+ls /media
+```
+You should see a folder starting with `sf_` (for example, `sf_shared`). If you see it, you are officially "connected" to your Ubuntu host!
 
 #### 1.3.3. Install Docker
 
@@ -201,9 +250,11 @@ docker run hello-world
 
 #### 1.3.4. Install make and hostsed
 
-**hostsed** - a tiny hosts file command line edit tool. It's a simple python tool for editing hosts file(default /etc/hosts), you can add or delete a DNS entry via command line shell(e.x. bash).
+**hostsed** - a tiny hosts file command line edit tool. It's a simple python tool for editing hosts file (default `/etc/hosts`), you can add or delete a DNS entry via command line shell (e.x. bash).
 
 ```bash
 sudo apt-get install --yes make hostsed
 ```
+
+---
 
