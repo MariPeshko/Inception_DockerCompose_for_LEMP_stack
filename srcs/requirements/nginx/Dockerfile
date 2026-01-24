@@ -10,6 +10,10 @@ RUN apt update && apt install -y --no-install-recommends --no-install-suggests \
 		procps && \
 		rm -rf /var/lib/apt/lists/*
 
+# delete standard config that listens to port 80
+RUN rm -rf /etc/nginx/sites-available/default \
+    && rm -rf /etc/nginx/sites-enabled/default
+
 #to run wothout compose file
 # 1 warning found (use docker --debug to expand):
 # - SecretsUsedInArgOrEnv: Do not use ARG or ENV instructions for sensitive data (ARG "SSL_KEY") (line 12)

@@ -213,6 +213,9 @@ docker exec nginx ls -la /var/www/html
 # Test internal connectivity
 docker exec nginx curl -I wordpress:9000
 docker exec nginx curl -I -k https://localhost
+
+# Test listening ports
+docker exec nginx ss -tuln
 ```
 
 ### Network Management

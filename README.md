@@ -157,6 +157,58 @@ This is a **"hybrid" approach**. It's a Named Volume that is configured to store
 
 ---
 
+## **Docker Daemon vs Foreground Mode**
+
+The word **"Daemon"** sounds mysterious, but in the IT context, it's simply a program that runs in the background without direct interaction with the user. In the Inception project, understanding how daemons work is critically important for proper container startup.
+
+### What is a Daemon?
+
+In regular operating systems (like Linux or macOS), a daemon is a process that:
+- Starts at system startup
+- "Detaches" from the terminal (goes to background)
+- Quietly performs its work (e.g., `sshd` waits for SSH connections, `cron` runs scheduled tasks)
+
+Usually, when a program becomes a daemon, it "closes" its connection to the console.
+
+### Why are "daemons" a problem for Docker?
+
+Here's the main trap of the project:
+
+**Docker principle:** A container lives as long as its main process (PID 1) lives.
+
+**Conflict:** If you run a program (like Nginx) as a daemon, it starts, creates a background process, and terminates its initial command.
+
+**Result:** Docker sees that the initial command has finished and immediately stops the container.
+
+Subjects says that "it is not recommended to use any hacky patches based on ’tail -f’ and similar methods when trying to run it".
+
+Evaluation sheet says:
+
+1. Examine the Dockerfiles. If you see `'tail -f'` or `any command run in background` in any of them in the ENTRYPOINT section, the evaluation ends now. Same thing if `'bash'` or `'sh'` are used but not for running a script (e.g, `'nginx & bash'` or `'bash'`).
+2. Examine scripts: "...a few examples of prohibited commands: `'sleep infinity'`, `'tail -f /dev/null'`, `'tail -f /dev/random'`.
+
+What is it about?
+
+Some students try to "trick" Docker: they run Nginx as a daemon, then add commands like `tail -f /dev/null`. This makes the container think it's still doing something and not close.
+
+The correct way is to force the program `**to work in the foreground**`.
+
+### How is this implemented in my project?
+
+In each of my containers, I need to disable "daemonization":
+
+**MariaDB:** The `mysqld` (or `mariadbd`) command by default in Docker images runs in the foreground.
+
+**PHP-FPM (WordPress):** It runs as `php-fpm -F` (F = foreground).
+
+**Nginx:** The command `nginx -g "daemon off;"` forces Nginx `not to go to background` but stay "attached" to the container's terminal.
+
+### So is it good to use daemons in Docker?
+
+No. Inside a container, the process should work in the foreground so Docker can monitor its state and collect logs.
+
+---
+
 ## **Resources**
 
 - [Manual for Oracle Virtual Box for virtual machine](https://www.virtualbox.org/manual/ch01.html)
