@@ -175,6 +175,13 @@ docker logs wordpress
 docker logs nginx
 ```
 
+### Stop and remove (delete) container
+```bash
+docker container stop CONTAINER
+docker container rm [OPTIONS] CONTAINER
+# -v, --volumes		Remove anonymous volumes associated with the container
+```
+
 #### Process Management
 ```bash
 # Check processes inside containers
@@ -298,6 +305,11 @@ docker volume ls
 # Inspect specific volumes  
 docker volume inspect inception_db_data
 docker volume inspect inception_wp_data
+```
+
+#### Remove a volume
+```bash
+docker volume rm NAME_VOLUME
 ```
 
 ## 💾 Data Storage and Persistence
